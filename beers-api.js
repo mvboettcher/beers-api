@@ -10,9 +10,9 @@ const express = require('express')
 const app = express()
 const port = process.env.PORT || 5000
 const bodyParser = require('body-parser')
-const { getBeer } = require('./dal')
+const { getBeer, addBeer } = require('./dal')
 const NodeHTTPError = require('node-http-error')
-const { } = require('ramda')
+const { not, isEmpty, propOr } = require('ramda')
 const checkRequiredFields = require('./lib/check-required-fields')
 const createMissingFieldsMsg = require('./lib/create-missing-field-msg')
 const pkGen = require('./lib/pk-gen')
@@ -34,17 +34,29 @@ app.get('/beers/:beerID', function(req, res, next) {
   })
 })
 
+app.post('/beers', function(req, res, next) {
+  const newBeer = propOr({}, 'body', req)
 
+  if(isEmpty(newBeer)) {
+    next(new NodeHTTPError(400, 'missing beer from request body'))
+    return
+  }
 
+  const missingFields = checkRequiredFields(['style', 'name', 'abv'], newBeer)
 
+  if(not(isEmpty(missingFields))) {
+    next(new NodeHTTPError(400, createMissingFieldsMsg(missingFields)))
+    return
+  }
 
-
-
-
-
-
-
-
+  addBeer(newBeer, function(err, data) {
+    if(err) {
+      next(new NodeHTTPError(err.status, err.message, err))
+      return
+    }
+    res.status(201).send(data)
+  })
+})
 
 
 

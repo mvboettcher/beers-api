@@ -11,10 +11,26 @@ const db = new PouchDB(
 
 const getBeer = (id, callback) => db.get(id, callback)
 
+const addBeer = (beer, callback) => {
+	const modifiedBeer = merge(beer, {
+		type: 'beer',
+		_id: pkGen('beer', '_', `${beer.style} ${beer.name}`)
+	})
+	db.put(modifiedBeer, callback)
+}
+
+
+
+
+
+
+
+
 
 
 const dal = {
-	getBeer
+	getBeer,
+  addBeer
 }
 
 module.exports = dal
