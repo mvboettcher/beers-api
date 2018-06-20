@@ -1,5 +1,5 @@
 require('dotenv').config()
-const { merge } = require('ramda')
+const { merge, map } = require('ramda')
 const PouchDB = require('pouchdb-core')
 const pkGen = require('./lib/pk-gen')
 
@@ -19,18 +19,19 @@ const addBeer = (beer, callback) => {
 	db.put(modifiedBeer, callback)
 }
 
+const listBeers = cb =>
+	listDocs({ include_docs: true, startkey: 'beer_', endkey: 'beer_\ufff0' }, cb)
 
-
-
-
-
-
-
-
+const listDocs = (options, cb) =>
+	db.allDocs(options, function(err, result) {
+		if (err) cb(err)
+		cb(null, map(row => row.doc, result.rows))
+	})
 
 const dal = {
 	getBeer,
-  addBeer
+	addBeer,
+	listBeers
 }
 
 module.exports = dal

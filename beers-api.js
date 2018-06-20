@@ -1,5 +1,3 @@
-// *Task 6* - You choose the domain, such as automobiles, dogs, beers, running shoes, or video games.  Create your own database.  Fill the database up with documents. Create a new nodejs/express app.  Create the following endpoints:
-//
 //  - Create a thing
 //  - Read a thing
 //  - Update a thing
@@ -10,7 +8,7 @@ const express = require('express')
 const app = express()
 const port = process.env.PORT || 5000
 const bodyParser = require('body-parser')
-const { getBeer, addBeer } = require('./dal')
+const { getBeer, addBeer, listBeers } = require('./dal')
 const NodeHTTPError = require('node-http-error')
 const { not, isEmpty, propOr } = require('ramda')
 const checkRequiredFields = require('./lib/check-required-fields')
@@ -24,44 +22,50 @@ app.get('/', function(req, res, next) {
 })
 
 app.get('/beers/:beerID', function(req, res, next) {
-  const beerID = req.params.beerID
-  getBeer(beerID, function(err, data) {
-    if(err) {
-      next(new NodeHTTPError(err.status, err.message, err))
-      return
-    }
-    res.status(200).send(data)
-  })
+	const beerID = req.params.beerID
+	getBeer(beerID, function(err, data) {
+		if (err) {
+			next(new NodeHTTPError(err.status, err.message, err))
+			return
+		}
+		res.status(200).send(data)
+	})
+})
+
+app.get('/beers', function(req, res, next) {
+	listBeers(function(err, data) {
+		if (err) {
+			next(new NodeHTTPError(err.status, err.message, err))
+			return
+		}
+
+		res.status(200).send(data)
+	})
 })
 
 app.post('/beers', function(req, res, next) {
-  const newBeer = propOr({}, 'body', req)
+	const newBeer = propOr({}, 'body', req)
 
-  if(isEmpty(newBeer)) {
-    next(new NodeHTTPError(400, 'missing beer from request body'))
-    return
-  }
+	if (isEmpty(newBeer)) {
+		next(new NodeHTTPError(400, 'missing beer from request body'))
+		return
+	}
 
-  const missingFields = checkRequiredFields(['style', 'name', 'abv'], newBeer)
+	const missingFields = checkRequiredFields(['style', 'name', 'abv'], newBeer)
 
-  if(not(isEmpty(missingFields))) {
-    next(new NodeHTTPError(400, createMissingFieldsMsg(missingFields)))
-    return
-  }
+	if (not(isEmpty(missingFields))) {
+		next(new NodeHTTPError(400, createMissingFieldsMsg(missingFields)))
+		return
+	}
 
-  addBeer(newBeer, function(err, data) {
-    if(err) {
-      next(new NodeHTTPError(err.status, err.message, err))
-      return
-    }
-    res.status(201).send(data)
-  })
+	addBeer(newBeer, function(err, data) {
+		if (err) {
+			next(new NodeHTTPError(err.status, err.message, err))
+			return
+		}
+		res.status(201).send(data)
+	})
 })
-
-
-
-
-
 
 app.use(function(err, req, res, next) {
 	console.log(
